@@ -1,28 +1,44 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
-[project]
-name = "tgc_FLORIS_PADT"
-#version = "0.0.1"
-authors = [
-    {name = "floris Padt", email = "floris@smart-r.net"},
-]
+[tool.poetry]
+name = "tgc_floris_padt"
+version = "0.0.3"
 description = "Tetris Game Charger - JADS 23/24"
+authors = ["Floris Padt <floris@smart-r.net>"]
+
 readme = "README.md"
-requires-python = ">=3.9"
-keywords = ["enexis", "jads"]
-license = {text = "mit"}
+
+[tool.poetry.dependencies]
+python = "^3.9"
+salabim = "23.3.13"
+cplex = "22.1.1.0"
+docplex = "2.25.236"
+mosek = "10.1.21"
+opencv-python = "4.8.1.78"
+numpy = "^1.26.0"
+pandas = "^2.1.3"
+# Add other packages your project depends on
+
+[tool.poetry.dev-dependencies]
+# development dependencies go here
+
+# requires-python = ">=3.9"
+# keywords = ["enexis", "jads"]
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+# [tool.setuptools]
+# install_requires = ["salabim==23.3.12"]
 #dependencies = [
 #    "requests",
 #    'importlib-metadata; python_version<"3.8"',
 #]
-dynamic = ["version"]
+# dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/Fpadt/tgc"
