@@ -1,3 +1,4 @@
+import salabim as sim
 import numpy as np
 import pandas as pd
 from openpyxl import Workbook
@@ -6,34 +7,44 @@ import statistics
 import os
 import ntpath
 
-np.random.seed(42)
+random_seed = 42 #'*' # 42
+# np.random.seed(random_seed)
 
-m = 20  #                   number of EVSEs
+time_unit = "minutes"  #    time unit used in the simulation
+sim_time = 5000
+
+z = float('inf') #          infinite
+
+e = z #                     number of EV's
+m = 5 #20  #                total number of SEs
+c = 3 #                     connected number of SE's
 n = 60  #                   time periods in the future (can become less)
-r = 0.5  #                  factor of Enexis grid connection
+r = 1  #                    factor of Enexis grid connection
+q = z #                     lenght of queue
+w = z #                     wait time in hrs for a parking place
 
-# --------------------------------------------------------------------------
-# The array's for all EV's & SE together and the resulting minimum.
-# EV = np.random.choice([EV_MPI, EV_MPI / 2, 3.33, 3.33 / 2], size=(m, n))
-# SE = np.random.choice([SE_MPO], size=(m, n))
-# EVSE = np.minimum(EV, SE)
-
+RUL = "FIFO"
 
 params_dict = {
-    "SOC": ("uniform", 0, 0.2), #       State of charge
-    "DSC": ("uniform", 0.4, 1), #       Desired state of charge
-    "DUR": ("uniform", 1, 8), #         Duration of Stay
+    "IAT": ("exponential", 60/40), #    Interarrival time 60/40
+    "DUR": ("exponential", 60/50), #    Duration of Stay    
+    "SOC": ("uniform", 0, 0.2), #       State of charge%
+    "DSC": ("uniform", 0.4, 1), #       Desired state of charge%
     "ENG": ("uniform", 0.3, 0.6), #     Energy price
     "CAP": ("uniform", 70, 70), #       Capacity
     "DEG": ("uniform", 0.075, 0.075), # Battery degradation
     "MPO": ("uniform", 7, 7), #         EVSE max Power output 
     "MPI": ("uniform", 7, 7), #         EV max Power input
+    "ENX": ("uniform", 70, 70), #       enexis max Power output
     }
+
 
 # SE_MPO = 7  #               EVSE max Power output for each time period
 # EV_MPI = 7  #               EV max Power input for each time period
+EX_MPO = m * r * \
+    params_dict["MPO"][1]  #  enexis max Power output for each time period (constant)
 # EX_MPO = m * r * SE_MPO  #  enexis max Power output for each time period (constant)
-# CAP = cap_l  #                 EV max capacity of battery
+# CAP = cap_l  #              EV max capacity of battery
 # K = 0.075  #                EV battery degradation cost per kWh
 
 # --------------------------------------------------------------------------
@@ -68,6 +79,8 @@ beta = 1.0  #               customer satisfaction
 gamma = 1.0  #              cost of energy
 
 # --------------------------------------------------------------------------
+print_ev = False
+
 print_solver_outcome = False
 print_EVSE_power = False
 
@@ -108,7 +121,21 @@ def create_random_generator(params_dict, key):
     elif distribution == 'gamma':
         shape, scale = params
         return lambda: np.random.gamma(shape, scale)
+    elif distribution == 'exponential':
+        scale = params[0]
+        return lambda: np.random.exponential(scale)
     else:
         raise ValueError(f"Unknown distribution: {distribution}")
 
-
+RLS = {
+    "EDD": "tod",  #         tested and Ok, static
+    "LDD": "-tod",  #        tested and Ok, static
+    "FIFO": "toa",  #        tested and Ok, static
+    "LIFO": "-toa",  #       tested and Ok, static
+    "SPT": "t2c",  #         tested and Ok, static
+    "LPT": "-t2c",  #        tested and Ok, static
+    "SRT": "rtc",  #         to be tested, dynamic - shortest remaining time       
+    "LRT": "-rtc",  #        to be tested, dynamic - longest  remaining time       
+    "LLX": "llx", #          tested and ok, static
+    "RLX": "rlx", #          to be tested, dynamic - remaining laxity
+}
