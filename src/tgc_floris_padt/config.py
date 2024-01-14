@@ -7,42 +7,48 @@ import statistics
 import os
 import ntpath
 
-random_seed = 42 #'*' # 42
+random_seed = 44  #'*' # 42
 # np.random.seed(random_seed)
 
 time_unit = "minutes"  #    time unit used in the simulation
 sim_time = 5000
 
-z = float('inf') #          infinite
+z = float("inf")  #          infinite
 
-e = z #                     number of EV's
-m = 5 #20  #                total number of SEs
-c = 3 #                     connected number of SE's
+e = 30  #                     number of EV's
+m = 1  # 20  #                total number of SEs
+c = 6  #                     connected number of SE's
 n = 60  #                   time periods in the future (can become less)
 r = 1  #                    factor of Enexis grid connection
-q = z #                     lenght of queue
-w = z #                     wait time in hrs for a parking place
+q = z  #                     lenght of queue
+w = z  #                     wait time in hrs for a parking place
 
 RUL = "FIFO"
 
+LAY = [True] * min(m, c) + [False] * max(m - c, 0)
+
+iat = 0 # 60 / (40 * m)
+
 params_dict = {
-    "IAT": ("exponential", 60/40), #    Interarrival time 60/40
-    "DUR": ("exponential", 60/50), #    Duration of Stay    
-    "SOC": ("uniform", 0, 0.2), #       State of charge%
-    "DSC": ("uniform", 0.4, 1), #       Desired state of charge%
-    "ENG": ("uniform", 0.3, 0.6), #     Energy price
-    "CAP": ("uniform", 70, 70), #       Capacity
-    "DEG": ("uniform", 0.075, 0.075), # Battery degradation
-    "MPO": ("uniform", 7, 7), #         EVSE max Power output 
-    "MPI": ("uniform", 7, 7), #         EV max Power input
-    "ENX": ("uniform", 70, 70), #       enexis max Power output
-    }
+    "IAT": ("exponential", iat),  #      Interarrival time 60/40
+    # "DUR": ("exponential", 60 / 50),  #    Duration of Stay
+    "DUR": ("uniform", 1, 8),  #    Duration of Stay    
+    "SOC": ("uniform", 0, 0.2),  #       State of charge%
+    "DSC": ("uniform", 0.4, 1),  #       Desired state of charge%
+    "ENG": ("uniform", 0.3, 0.6),  #     Energy price
+    "CAP": ("uniform", 70, 70),  #       Capacity
+    "DEG": ("uniform", 0.075, 0.075),  # Battery degradation
+    "MPO": ("uniform", 7, 7),  #         EVSE max Power output
+    "MPI": ("uniform", 7, 7),  #         EV max Power input
+    "ENX": ("uniform", 70, 70),  #       enexis max Power output
+}
 
 
 # SE_MPO = 7  #               EVSE max Power output for each time period
 # EV_MPI = 7  #               EV max Power input for each time period
-EX_MPO = m * r * \
-    params_dict["MPO"][1]  #  enexis max Power output for each time period (constant)
+EX_MPO = (
+    m * r * params_dict["MPO"][1]
+)  #  enexis max Power output for each time period (constant)
 # EX_MPO = m * r * SE_MPO  #  enexis max Power output for each time period (constant)
 # CAP = cap_l  #              EV max capacity of battery
 # K = 0.075  #                EV battery degradation cost per kWh
@@ -101,6 +107,7 @@ solver = "glpk"  #          m 50 EVSE's, > 50 time periods
 
 # --------------------------------------------------------------------------
 
+
 def create_random_generator(params_dict, key):
     params = params_dict.get(key)
     if params is None:
@@ -109,23 +116,24 @@ def create_random_generator(params_dict, key):
     distribution = params[0]
     params = params[1:]
 
-    if distribution == 'uniform':
+    if distribution == "uniform":
         low, high = params
         return lambda: np.random.uniform(low, high)
-    elif distribution == 'normal':
+    elif distribution == "normal":
         mu, sigma = params
         return lambda: np.random.normal(mu, sigma)
-    elif distribution == 'poisson':
+    elif distribution == "poisson":
         lam = params[0]
         return lambda: np.random.poisson(lam)
-    elif distribution == 'gamma':
+    elif distribution == "gamma":
         shape, scale = params
         return lambda: np.random.gamma(shape, scale)
-    elif distribution == 'exponential':
+    elif distribution == "exponential":
         scale = params[0]
         return lambda: np.random.exponential(scale)
     else:
         raise ValueError(f"Unknown distribution: {distribution}")
+
 
 RLS = {
     "EDD": "tod",  #         tested and Ok, static
@@ -134,8 +142,8 @@ RLS = {
     "LIFO": "-toa",  #       tested and Ok, static
     "SPT": "t2c",  #         tested and Ok, static
     "LPT": "-t2c",  #        tested and Ok, static
-    "SRT": "rtc",  #         to be tested, dynamic - shortest remaining time       
-    "LRT": "-rtc",  #        to be tested, dynamic - longest  remaining time       
-    "LLX": "llx", #          tested and ok, static
-    "RLX": "rlx", #          to be tested, dynamic - remaining laxity
+    "SRT": "rtc",  #         to be tested, dynamic - shortest remaining time
+    "LRT": "-rtc",  #        to be tested, dynamic - longest  remaining time
+    "LLX": "llx",  #          tested and ok, static
+    "RLX": "rlx",  #          to be tested, dynamic - remaining laxity
 }

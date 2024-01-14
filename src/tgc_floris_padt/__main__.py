@@ -5,11 +5,10 @@
 # packages
 import salabim as sim
 from config import *
+from ev_charge_profile import *
 
 # from tgcsim.models.generator import EV_Generator, SE_Generator
 
-# from config import *
-# from ev_charge_profile import *
 # from olp_abstract_model import *
 # from energy_price import *
 
@@ -50,8 +49,8 @@ class EV(sim.Component):
         # --- Variables ---
         self.toa = None  #                   self.app.now()
         self.tod = None
-        self.dsc = desired_state_of_charge * ev_battery_capacity
-        self.t2c = self.dsc / self.mpi  #    estimated time to charge
+        self.dec = desired_state_of_charge * ev_battery_capacity
+        self.t2c = self.dec / self.mpi  #    estimated time to charge
         self.llx = None  #                   least Laxity
         self.ses = None
         # --- Monitors ---
@@ -116,19 +115,19 @@ class SE(sim.Component):
         self.mon_kwh.tally(self.pwr)
         self.ev.mon_kwh.tally(self.pwr)
 
-    # def get_charge_profile(self):
-    #     if self.ev is None:
-    #         return None
-    #     else:
-    #         return charge_profile(
-    #         dur=self.ev.stay,
-    #         soc=self.ev.soc,
-    #         d_c=self.ev.d_c,
-    #         cap=self.ev.cap,
-    #         ev_mpi=self.ev.mpi,
-    #         se_mpo=self.mpo,
-    #         k=self.ev.k,
-    # )
+    def get_charge_profile(self):
+        if self.ev is None:
+            return None
+        else:
+            return charge_profile(
+            dur=self.ev.dur,
+            soc=self.ev.soc,
+            dsc=self.ev.dsc,
+            cap=self.ev.cap,
+            ev_mpi=self.ev.mpi,
+            se_mpo=self.mpo,
+            k=self.ev.deg,
+    )
 
     def process(self):
         while True:
@@ -192,6 +191,17 @@ class TGC(sim.Component):
                 # \tpwr: {se.pwr}\tdsc: {round(se.ev.dsc)}  rem: {se.remaining_duration()}\tsch: {se.scheduled_time()}"""
             )
 
+    def print_charge(self, se):
+        if se.ev is None:
+            print(f"{app.now()}\t - NO_EV/{se.name()} ")
+        else:
+            print(
+                se.get_charge_profile()
+                # f"{env.now()}\t - {evse.ev.name()}/{evse.name()} - pwr: {evse.pwr}\
+                #   dc: {round(evse.ev.dc)} - ckwh: {round(evse.ev.ckwh)} - \
+                #   rem: {evse.remaining_duration()} sch: {evse.scheduled_time()}"
+            )    
+
     def assign_power(self):
         """Assign power to EVSEs according to priority
         Start with the total Power available fro Enexis
@@ -231,6 +241,7 @@ class TGC(sim.Component):
             self.update_se_enerygy_charged()
             # statistics
             # [self.print_state(x) for x in HUB.ses]
+            [self.print_charge(x) for x in HUB.ses]    
 
             self.standby()  # makes it run every event
 
@@ -302,7 +313,7 @@ class SE_Generator(sim.Component):
     def process(self):
         i = 1
         while i <= self.nse:
-            se = SE(se_max_power_output=self.rnd_mpo(), connected_to_grid=self.ncn >= i)
+            se = SE(se_max_power_output=self.rnd_mpo(), connected_to_grid=LAY[i - 1])
             se.register(self.ses)
             i += 1
 
@@ -362,7 +373,13 @@ print("\nEV Statistics:")
 #     f"{ev.name()} - dsc: {ev.dsc} - csc: {ev.csc} - toa: {ev.toa} - tod: {ev.tod}"
 # )
 
+# TODO
+# cus_mon = sum(ev.mon_kwh for ev in GEN.evs).rename('Customer Satisfaction')
+# # cus_mon.print_statistics()
+# print(f"cus_mon.name(): {round(cus_mon.mean(), 2)} %")
+
 print("\nSE Statistics:")
+
 for se in HUB.ses:
     # print(f"\n{se.name()}")
     print(
@@ -376,6 +393,10 @@ for se in HUB.ses:
     # se.mon_kwh.print_statistics()
     # se.mon_dur.print_statistics()
     # print(se.mon_kwh.as_dataframe())
+
+enx_mon = sum(se.mon_kwh for se in HUB.ses).rename('Enexis performance')
+# enx_mon.print_statistics()
+print(f"Enexis Grid Utilization: {round(enx_mon.mean()/EX_MPO, 2)} %")
 
 print(f"\nEVs balked: {app.number_balked}")
 print(f"EVs reneged: {app.number_reneged}")
