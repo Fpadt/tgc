@@ -48,7 +48,7 @@ class TGC(Component):
 
     def set_clock(self):
         min_rtc = float("inf")
-        for se in self._fac.ses:
+        for se in self._fac.fac:
             if se.evc is not None and se.evc.isscheduled():
                 if se.evc.tcr > 0:
                     tst = se.scheduled_time() - self._app.now()
@@ -71,7 +71,7 @@ class TGC(Component):
 
         # Create schedule sorted on property_name
         # add the EVSE without EV at then end to make it complete
-        for se in self._fac.ses:
+        for se in self._fac.fac:
             if se.evc is None or se.con == False:
                 property_value = float("inf")
             else:
@@ -92,7 +92,7 @@ class TGC(Component):
             )
 
     def print_charge(self):
-        for se in self._fac.ses:
+        for se in self._fac.fac:
             if se.evc is not None and se.evc.isscheduled():
                 print(se.get_charge_profile())
 
@@ -126,13 +126,13 @@ class TGC(Component):
 
     def get_next_hold(self) -> float:
         nxt_hold = float("inf")
-        for se in self._fac.ses:
+        for se in self._fac.fac:
             if se.evc is not None and se.evc.isscheduled():
                 nxt_hold = min(se.get_charge_profile()["n_hold"], nxt_hold)
         return nxt_hold
 
     def update_se_enerygy_charged(self):
-        for se in self._fac.ses:
+        for se in self._fac.fac:
             if se.evc is not None and se.evc.isscheduled():
                 se.update_energy_charged()
 
@@ -147,8 +147,8 @@ class TGC(Component):
             self.hold(next_hold)
             # ts = app.now(); print(f"time: {ts}")
             # statistics
-            # [self.print_state(x) for x in self._fac.ses]
-            # [self.print_charge(x) for x in self._fac.ses]
+            # [self.print_state(x) for x in self._fac.fac]
+            # [self.print_charge(x) for x in self._fac.fac]
             # next_hold = self.determine_next_hold()
             # self.standby()
             # self.hold(next_hold, priority=0, urgent=True)  # makes it run every hour

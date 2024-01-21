@@ -3,6 +3,7 @@
 # ------------------------------------------------------------------------
 
 from config import *
+from tgcsim.network.tgc_network import TGC_network
 
 # --------------------------------------------------------------------------
 # Simulation
@@ -17,41 +18,28 @@ app = App(
     yieldless=True,  #                 defines whether the simulation is yieldless or not
 )
 
-# Create Queue and set monitor to stats_only
-QUE = Queue(
-    name="waiting_line",
-)
-TGC = TGC(
-    name="Tetris Game Charger",
-    enexis_max_power_output=EX_MPO,
-    priority_rule=RUL,
-    simulation_app=app,
-)
-FAC = SE_Generator(
-    distributions_dict=params_dict,
-    layout=LAY,
-    tetris_game_charger=TGC,
-    waiting_line=QUE,
-    simulation_app=app,
-)
-FLT = EV_Generator(
-    distributions_dict=params_dict,
-    number_of_evs=e,
-    charging_facility=FAC,
-    waiting_line=QUE,
-    max_queue_length=q,
-    max_wait_time=w,
-    simulation_app=app,
-)
-
 # --------------------------------------------------------------------------
 app.number_balked = 0
 app.number_reneged = 0
 app.evs = []
 
-QUE.length_of_stay.reset_monitors(stats_only=True)
-TGC.fac = FAC
+# ------------------------------------------------------------------------
+# Model
+# ------------------------------------------------------------------------
+TGCN = TGC_network(
+    enexis_max_power_output=EX_MPO,
+    priority_rule=RUL,
+    simulation_app=app,
+    distributions_dict=params_dict,
+    layout=LAY,
+    number_of_evs=e,
+    max_queue_length=q,
+    max_wait_time=w,
+)
 
+TGCN.create_network()
+
+# --------------------------------------------------------------------------
 # Execute Simulation
 sim_start = datetime.now()
 app.run(till=sim_time)
@@ -62,8 +50,8 @@ app.run(till=sim_time)
 # --------------------------------------------------------------------------
 
 print("\n")
-QUE.length_of_stay.print_statistics()
-print(f"Wq: = {QUE.length_of_stay.mean()}\n")
+TGCN.que.length_of_stay.print_statistics() 
+print(f"Wq: = {TGCN.que.length_of_stay.mean()}\n")
 
 print(f"\nEVs balked: {app.number_balked}")
 print(f"EVs reneged: {app.number_reneged}")
@@ -85,7 +73,7 @@ if print_ev_details == True:
 if print_se_details == True:
     print("\nSE Statistics:")
 
-    for se in FAC.ses:
+    for se in TGCN.fac.fac:
         print(
             f"""{se.name()}\t \
             tot: {round(se.mon_kwh.duration(ex0=False) * se.mon_kwh.mean(ex0=False), 2)} kWh\t \
@@ -104,7 +92,7 @@ mean_sat = np.nanmean(sat_values)
 print(f"Customer Satisfaction: {round(mean_sat, 0)} %")
 
 # --- Enexis ---
-enx_mon = sum(se.mon_kwh for se in FAC.ses).rename("Enexis performance")
+enx_mon = sum(se.mon_kwh for se in TGCN.fac.fac).rename("Enexis performance")
 # enx_mon.print_statistics()
 
 dlv = enx_mon.duration(ex0=False) * enx_mon.mean(ex0=False)

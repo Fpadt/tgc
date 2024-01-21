@@ -3,6 +3,7 @@ from salabim import Component
 from tgcsim.models.ev import EV
 from tgcsim.models.distr_func_factory import create_random_generator
 
+
 # --------------------------------------------------------------------------
 # Generator which creates EV's up to a certain number
 class EV_Generator(Component):
@@ -16,16 +17,14 @@ class EV_Generator(Component):
         self,
         distributions_dict,
         number_of_evs,
-        charging_facility,
-        waiting_line,
         max_queue_length,
         max_wait_time,
         simulation_app,
     ):
         self._dis = distributions_dict
-        self._nev = number_of_evs        
-        self._fac = charging_facility
-        self._que = waiting_line
+        self._nev = number_of_evs
+        self._fac = None
+        self._que = None
         self._mxq = max_queue_length
         self._mxw = max_wait_time
         self._app = simulation_app
@@ -36,6 +35,22 @@ class EV_Generator(Component):
         self._cap = create_random_generator(self._dis, "CAP")
         self._mpi = create_random_generator(self._dis, "MPI")
         self._deg = create_random_generator(self._dis, "DEG")
+
+    @property
+    def fac(self):
+        return self._fac
+
+    @fac.setter
+    def fac(self, value):
+        self._fac = value
+
+    @property
+    def que(self):
+        return self._que
+    
+    @que.setter
+    def que(self, value):
+        self._que = value
 
     def process(self):
         i = 1
@@ -64,5 +79,3 @@ class EV_Generator(Component):
             # hold for interarrival time
             self.hold(self._iat(), priority=1)
             i += 1
-
-

@@ -239,7 +239,7 @@ class EV(Component):
         # enter the waiting line
         self.enter(self._que)
         # check if any SE is available
-        for se in self._fac.ses:
+        for se in self._fac.fac:
             if se.ispassive():
                 se.activate()
                 break
