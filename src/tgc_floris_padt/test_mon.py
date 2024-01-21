@@ -1,5 +1,7 @@
 import salabim as sim
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 
 class tick(sim.Component):
@@ -8,6 +10,28 @@ class tick(sim.Component):
             self.hold(0.5, priority=0)
             print(f"tick: {env.now()}")
 
+class Mon_(sim.Component):
+    def setup(self):
+        self._mon = sim.Monitor("pwr", level=True, initial_tally=0)
+
+    def process(self):
+        k = 0
+        while k < 2:        
+            i = 1
+            self.hold(10)
+            while i < 4:
+                # print(f"1: {env.now()}\ti: {i}")
+                self.hold(i, priority=0)
+                # print(f"2: {env.now()}\ti: {i}")
+                self._mon.tally(i)
+                i += 1
+            self._mon.tally(0)
+            k += 1
+
+
+        # self.mon.print_statistics()
+        m_se.mon = self._mon
+        m_se.activate()
 
 class Mon0(sim.Component):
     def setup(self):
@@ -123,8 +147,62 @@ class Mon3(sim.Component):
         print(cap, tot, tot / dur, tot / dr0)
 
 
+class Mon4_se(sim.Component):
+    def setup(self):
+        self._mon = sim.Monitor("se_pwr", level=True, initial_tally=0)
+
+    @property
+    def mon(self):
+        return self._mon
+
+    @mon.setter
+    def mon(self, ev_mon):
+        self._mon += ev_mon
+
+    def process(self):
+        self.passivate()
+        print(
+            f"""SE Monitor\n\
+              {self._mon.as_dataframe()}\n\
+              {self._mon.print_statistics()}"""
+        )
+        df = self._mon.as_dataframe()
+        plt.step(df['t'], df['se_pwr.merged.x'], where='post')
+
+        plt.xlabel('t')
+        plt.ylabel('cap')
+        plt.title('Step Plot')
+
+        plt.show()
+
+
+class Mon4_ev(sim.Component):
+    def setup(self):
+        self._mon = sim.Monitor("pwr", level=True, initial_tally=0)
+
+    def process(self):
+        k = 0
+        while k < 2:        
+            i = 1
+            self.hold(10)
+            while i < 4:
+                # print(f"1: {env.now()}\ti: {i}")
+                self.hold(i, priority=0)
+                # print(f"2: {env.now()}\ti: {i}")
+                self._mon.tally(i)
+                i += 1
+            self._mon.tally(0)
+            k += 1
+
+
+        # self.mon.print_statistics()
+        m_se.mon = self._mon
+        m_se.activate()
+
+
 env = sim.Environment(trace=False)
 
-Mon3()
+m_ev = Mon4_ev()
+m_se = Mon4_se()
 
 env.run()

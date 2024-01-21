@@ -64,6 +64,7 @@ params_dict = {
     "MPO": ("uniform", 7, 7),  #         EVSE max Power output
     "MPI": ("uniform", 7, 7),  #         EV max Power input
     "ENX": ("uniform", 70, 70),  #       enexis max Power output
+    "CVP": ("uniform", 80, 80),  #       Start of CV phase	
 }
 
 EX_MPO = (

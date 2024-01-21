@@ -94,7 +94,7 @@ class SE(Component):
 
             # assign EV
             self._evc = self._que.pop()
-            self._evc.ses = self.name() + "-" + self._evc.name()
+            self._evc.sec = self
             self._evc.toa = self._app.now()
 
             self._tgc.activate()

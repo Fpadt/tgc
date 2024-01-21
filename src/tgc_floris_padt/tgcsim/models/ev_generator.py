@@ -21,7 +21,7 @@ class EV_Generator(Component):
         max_wait_time,
         simulation_app,
     ):
-        self._dis = distributions_dict
+        self._dis = distributions_dict    
         self._nev = number_of_evs
         self._fac = None
         self._que = None
@@ -35,6 +35,7 @@ class EV_Generator(Component):
         self._cap = create_random_generator(self._dis, "CAP")
         self._mpi = create_random_generator(self._dis, "MPI")
         self._deg = create_random_generator(self._dis, "DEG")
+        self._cvp = create_random_generator(self._dis, "CVP")
 
     @property
     def fac(self):
@@ -67,6 +68,7 @@ class EV_Generator(Component):
                 initial_state_of_charge=isc,
                 desired_state_of_charge=dsc,
                 ev_battery_capacity=cap,
+                ev_start_of_cv_phase_percentage=self._cvp(),
                 ev_max_power_input=mpi,
                 battery_degradation=self._deg(),
                 charging_facility=self._fac,

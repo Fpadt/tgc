@@ -1,4 +1,67 @@
 from salabim import Monitor, Component
+from scipy.optimize import fsolve
+import numpy as np
+
+def cv_pwr(t: float, pm: float, k: float) -> float:
+    """
+    Calculate the charging power for a given time.
+
+    Parameters
+    ----------
+    t : float
+        Time in hours.
+    pm : float
+        Maximum power input of the EV in kW.
+    k : float
+        Charging curve constant.
+        0.01-0.03 charge aggressively,
+        0.05-0.1  prioritizing battery health and longevity
+    """
+    return pm * np.exp(-k * t)
+
+
+def cv_eng(t2, t1, pm, k) -> float:
+    """
+    Calculate the charging energy for a given time interval (t2, t1)
+    note: t2 > t1
+
+    Parameters
+    ----------
+    t2 : float
+        End time in hours.
+    t1 : float
+        Start time in hours.
+    pm : float
+        Maximum power input of the EV in kW.
+    k : float
+        Charging curve constant.
+        0.01-0.03 charge aggressively,
+        0.05-0.1  prioritizing battery health and longevity
+    """
+    return (-1 / k) * (cv_pwr(t2, pm, k) - cv_pwr(t1, pm, k)) 
+
+# Define the function for the given equation with specific ta, pm and k
+def zero_for_E(t2, t1, pm, k, E) -> float:
+    """
+    function to solve the root of the equation, so where it is 0
+
+    Parameters
+    ----------
+    t2 : float
+        End time in hours.
+    t1 : float
+        Start time in hours.
+    pm : float
+        Maximum power input of the EV in kW.
+    k : float
+        Charging curve constant.
+        0.01-0.03 charge aggressively,
+        0.05-0.1  prioritizing battery health and longevity
+    E : float
+        Energy in kWh to be charged
+    """
+    return cv_eng(t2, t1, pm, k) - E
+
 
 class EV(Component):
     """Class to model the behavior of an Electrical Vehicle (ev).
@@ -18,6 +81,7 @@ class EV(Component):
         initial_state_of_charge,
         desired_state_of_charge,
         ev_battery_capacity,
+        ev_start_of_cv_phase_percentage,
         ev_max_power_input,
         battery_degradation,
         charging_facility,
@@ -28,6 +92,7 @@ class EV(Component):
     ):
         # --- set by setup parameters ---
         self._cap = ev_battery_capacity
+        self._cvp = ev_start_of_cv_phase_percentage / 100
         self._deg = battery_degradation
         self._dur = duration_of_stay
         self._mpi = ev_max_power_input
@@ -40,9 +105,9 @@ class EV(Component):
         self._app = simulation_app
         # --- Dynamic Read/Write ---
         self._pwr = 7  # TODO
-        self._ses = None
+        self._sec = None
         self._toa = None
-        self._tss = None # TODO still needed?
+        self._tss = None  # TODO still needed?
 
         # --- Monitors ---
         self.mon_kwh = Monitor(name="EV kWh", level=True)  # TODO remove
@@ -105,6 +170,18 @@ class EV(Component):
         return self.e_r - self.e_i
 
     @property
+    def ep1(self) -> float:
+        return max(self._cvp * self._cap - self.e_c, 0)
+
+    @property
+    def ep2(self) -> float:
+        return max(self.e_r - self._cvp * self._cap, 0)
+
+    @property
+    def ep3(self) -> float:
+        return 0
+
+    @property
     def erd(self) -> float:
         return self.e_d - self.e_r
 
@@ -121,6 +198,10 @@ class EV(Component):
         #  mpi if e_r-e_c<0
         return self._pwr
 
+    @property
+    def p_r(self) -> float:
+        return min(self._mpi, self._sec.mpo)
+    
     @property
     def s_c(self) -> float:
         return self.e_c / self._cap
@@ -150,8 +231,12 @@ class EV(Component):
         return self.ecr / self._cap
 
     @property
+    def sec(self) -> float:
+        return self._sec
+    
+    @property
     def ses(self) -> float:
-        return self._ses
+        return self._sec.name() + "/" + self.name()
 
     @property
     def sic(self) -> float:
@@ -198,6 +283,26 @@ class EV(Component):
         return self._toa + self._dur
 
     @property
+    def tp1(self) -> float:
+        return min(self.ep1 / self._mpi, self.tp3)
+
+    @property
+    def tp2(self) -> float:
+        # Solve the equation numerically
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fsolve.html
+        
+        # TODO: replace self._mpi by self.p_r on all places
+        sol = 0
+        if self.ep2 > 0:
+            sol = fsolve(func=zero_for_E, x0=0, args=(0, self._mpi, self._deg, self.ep2), xtol=1e-2)[0]
+
+        return sol
+
+    @property
+    def tp3(self) -> float:
+        return max(self.tod - self._app.now(), 0)
+
+    @property
     def trd(self) -> float:
         return self.erd / self._pwr
 
@@ -216,9 +321,9 @@ class EV(Component):
     #     self._tss = self._app.now()
     #     self._pwr = value
 
-    @ses.setter
-    def ses(self, session):
-        self._ses = session
+    @sec.setter
+    def sec(self, se):
+        self._sec = se
 
     @toa.setter
     def toa(self, start_time_of_charge):

@@ -129,8 +129,8 @@ dfResult.to_csv(
 )
 
 
-# check coding in EV generator TODO for dsc and isc
-# check als tch charge less than duration TODO ??
-# ev.mpi formule > 80% TODO
-# OLP koppelen
-# duration and iel dynamisch maken
+# TODO: check coding in EV generator for dsc and isc
+# TODO:  check als tch charge less than duration ??
+# TODO: ev.mpi formule > 80% 
+# TODO: OLP koppelen aan TGC
+
