@@ -1,0 +1,118 @@
+dur
+isc
+csc
+dsc
+cap
+deg
+iel
+cel
+del
+mpi
+rel
+rtc
+toa
+tod
+tss
+tch
+llx
+ses
+val
+    @property
+    def cap(self):
+        return self._cap
+    
+    @property
+    def csc(self):
+        return self._cel/self._cap
+
+    @property
+    def enr(self):
+        return self._cel - self._iel
+
+    @property
+    def deg(self):
+        return self._deg
+
+    @property
+    def dsc(self):
+        return self._dsc
+
+    @property
+    def dur(self):
+        return self._dur
+
+    @property
+    def llx(self):
+        return self._llx
+
+    @property
+    def isc(self):
+        return self._isc
+
+    @property
+    def rtc(self):
+        rtc = max((self._rel - self._cel) / self._mpi, 0)
+        if self._tod - app.now() < rtc:
+            rtc = float("inf")
+        return rtc
+
+    @property
+    def tch(self):
+        return self._tch
+
+    # TODO formula for > 80
+    @property
+    def mpi(self):
+        mpi = 0
+        if round(self._rel - self._cel, 6) != 0:
+            mpi = self._mpi
+        return mpi
+
+    # @property
+    # def pwr(self):
+    #     return self._pwr
+
+    @property
+    def sat(self):
+        if self._rel <= self._iel:
+            return np.nan
+        else:
+            return 100 * (self._cel - self._iel) / (self._rel - self._iel)
+
+    @property
+    def ses(self):
+        return self._ses
+
+    @property
+    def toa(self):
+        return self._toa
+
+    @property
+    def tod(self):
+        return self._tod
+
+    # --- properties Write ---
+    # @enr.setter
+    # def enr(self, value):
+    #     self._cel += value
+    #     # self.mon_kwh.tally(value)
+
+    # @pwr.setter
+    # def pwr(self, value):
+    #     energy_charged = (app.now() - self._tss) * self._ppw
+    #     self._cel += energy_charged
+    #     # self.mon_kwh.tally(energy_charged)
+    #     self._ppw = self._pwr
+    #     self._tss = app.now()
+    #     self._pwr = value
+
+    @ses.setter
+    def ses(self, session):
+ses = session
+
+    @toa.setter
+    def toa(self, start_time_of_charge):
+toa = start_time_of_charge
+tss = self._toa
+tod = self._toa + self._dur
+llx = self._tod - self._tch

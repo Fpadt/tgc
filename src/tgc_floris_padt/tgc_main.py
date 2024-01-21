@@ -168,7 +168,7 @@ EVS = [
     for _ in range(m)
 ]
 
-np.random.normal(loc=0.0, scale=0.1)
+
 TGC(name="TGC")
 
 waitingline = Queue("waitingline")

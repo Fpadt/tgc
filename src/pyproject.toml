@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "tgc_floris_padt"
-version = "0.0.3"
+version = "0.0.4"
 description = "Tetris Game Charger - JADS 23/24"
 authors = ["Floris Padt <floris@smart-r.net>"]
 
@@ -22,6 +22,7 @@ pandas = "^2.1.3"
 openpyxl = "3.1.2"  #maybe remove
 greenlet = "3.0.1"
 scipy = "1.11.4"
+pyomo = "6.7.0"
 
 [tool.poetry.dev-dependencies]
 # development dependencies go here

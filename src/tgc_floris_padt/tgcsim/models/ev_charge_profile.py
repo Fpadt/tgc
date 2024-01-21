@@ -1,6 +1,7 @@
 from scipy.optimize import fsolve
 import numpy as np
 
+
 def cv_pwr(t: float, pm: float, k: float) -> float:
     """
     Calculate the charging power for a given time.
@@ -37,7 +38,8 @@ def cv_eng(t2, t1, pm, k) -> float:
         0.01-0.03 charge aggressively,
         0.05-0.1  prioritizing battery health and longevity
     """
-    return (-1 / k) * (cv_pwr(t2, pm, k) - cv_pwr(t1, pm, k))
+    return (cv_pwr(t2, pm, k) - cv_pwr(t1, pm, k))
+    # return (-1 / k) * (cv_pwr(t2, pm, k) - cv_pwr(t1, pm, k)) TODO
 
 
 # def cv_pwr_avg(t2, t1, pm, k) -> float:
@@ -46,12 +48,11 @@ def cv_eng(t2, t1, pm, k) -> float:
 
 def charge_profile(
     dur: float,
-    soc: float,
-    d_c: float,
+    csc: float,
+    dsc: float,
     cap: float,
-    ev_mpi: float,
-    se_mpo: float,
-    k: float,
+    pwr: float,
+    deg: float,
 ) -> list:
     """
     Calculate the charging profile for a given EV.
@@ -60,17 +61,15 @@ def charge_profile(
     ----------
     dur : float
         Duration of stay in hours.
-    soc : float
-        State of charge of the battery in %.
-    d_c : float
-        Desired charge of the battery in %.
+    csc : float
+        Current tate of charge of the battery in %.
+    dsc : float
+        Desired state of charge of the battery in %.
     cap : float
         Capacity of the battery in kWh.
-    ev_mpi : float
-        Maximum power input of the EV in kW.
-    se_mpo : float
-        Maximum power output of the EVSE in kW.
-    k : float
+    pwr : float
+        power output SE/input of the EV in kW.
+    deg : float
         Charging curve constant.
         0.01-0.03 charge aggressively,
         0.05-0.1  prioritizing battery health and longevity
@@ -85,19 +84,20 @@ def charge_profile(
     # https://www.homechargingstations.com/ev-charging-time-calculator/
     # --------------------------------------------------------------------------
     # Calculate the charge required to reach the desired capacity
+    k = deg
+
     cv = 0.8 * cap  #                                charging curve flattens at cap.
-    dc = d_c * cap  #                                soc + charge [kWh] required
-    mp = min(ev_mpi, se_mpo)  #                      max power [kW] for charging
+    dc = dsc * cap  #                                soc + charge [kWh] required
 
     # current charge
-    uc0 = soc * cap  #                                charge [kWh] at entry
-    up0 = mp  #                                       max power [kW] at entry
-    ut0 = uc0 / up0  #                                time required for charge at entry
+    uc0 = csc * cap  #                               charge [kWh] at entry
+    up0 = pwr  #                                     max power [kW] at entry
+    ut0 = 0 if pwr == 0 else uc0 / up0  #            time required for charge at entry
 
     # first part of charge < 80% of cap
     uc1 = max(min(dc, cv) - min(uc0, cv), 0)  #      charge [kWh] required
-    up1 = 0 if uc1 == 0 else mp  #                   max power [kW] for charging
-    ut1 = 0 if uc1 == 0 else uc1 / up1  #            time [h] required
+    up1 = 0 if uc1 == 0 else pwr  #                  max power [kW] for charging
+    ut1 = 0 if up1 == 0 else round(uc1 / up1, 8)  #  time [h] round 
     # constrainted by duration
     ct1 = min(dur, ut1)  #                           time constrainted by duration
     cp1 = up1  #                                     max power [kW] for charging
@@ -139,35 +139,37 @@ def charge_profile(
     if uc2 > 0:
         # Solve the equation numerically
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fsolve.html
-        solution = fsolve(func=zero_for_E, x0=ut1, args=(0, mp, k, uc2), xtol=1e-3)
+        solution = fsolve(func=zero_for_E, x0=ut1, args=(0, pwr, k, uc2), xtol=1e-2)
 
         ut2 = solution[0]  #                         time [h] required during CV
-        up2 = cv_pwr(ut2, mp, k)  #                  power [kW] at the end
+        up2 = cv_pwr(ut2, pwr, k)  #                  power [kW] at the end
 
         ct2 = max(0, min(dur - ut1, ut2))  #         real time [h] during CV
 
         if ct2 > 0:
-            cc2 = cv_eng(ct2, 0, mp, k)  #           charge [kWh] during CV
-            cp2 = cp1  # cv_pwr(ct2, mp, k)  #       real power [kW] at the end
+            cc2 = cv_eng(ct2, 0, pwr, k)  #           charge [kWh] during CV
+            cp2 = cp1  # cv_pwr(ct2, pwr, k)  #       real power [kW] at the end
 
     # --------------------------------------------------------------------------
-    e2 = 0 if ut2 == 0 else float(zero_for_E(t2=ut2, t1=0, pm=mp, k=k, E=uc2))
+    e2 = 0 if ut2 == 0 else float(zero_for_E(t2=ut2, t1=0, pm=pwr, k=k, E=uc2))
     # --------------------------------------------------------------------------
     # Calculate the charging profile if more time is available
     ut3 = max(0, dur - (ut1 + ut2))  #               slack time [h] for parking
     ct3 = ut3  #                                     real slack time [h] for parking
 
     if ct3 > 0:
-        cc3 = cv_eng(ct3, 0, mp, k)  #               charge [kWh] during CV
-        cp3 = cp1  # cv_pwr(ct3, mp, k)  #           real power [kW] at the end
+        cc3 = cv_eng(ct3, 0, pwr, k)  #              charge [kWh] during CV
+        cp3 = cp1  # cv_pwr(ct3, pwr, k)  #          real power [kW] at the end
+
+    nxt_hold = ct1 if ct1 > 0 else ct2 if ct2 > 0 else ct3 if ct3 > 0 else float("inf")
 
     return {
         "params": {
             "dur": dur,
-            "soc": soc,
-            "d_c": d_c,
+            "csc": csc,
+            "dsc": dsc,
             "cap": cap,
-            "mxp": mp,
+            "mxp": pwr,
             "k": k,
         },
         "phase0": {"c0": uc0, "t": ut0, "p": up0},
@@ -180,8 +182,9 @@ def charge_profile(
             "ufc": uc0 + uc1 + uc2 + e2,
             "cfc": uc0 + cc1 + cc2 + e2,
             "rem": cc1 + cc2 + e2,
-            "dc": dc,
-            "rm": dc - (uc0 + uc1 + uc2 + e2),
+            "dec": dc,
+            "err": dc - (uc0 + uc1 + uc2 + e2),
         },
         "tslots": {"t1": ut1, "T1": ct1, "t2": ut2, "T2": ct2, "t3": ut3, "T3": ut3},
+        "n_hold": nxt_hold,
     }

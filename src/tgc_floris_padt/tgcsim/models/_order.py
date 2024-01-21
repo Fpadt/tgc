@@ -4,8 +4,8 @@
 
 from salabim import *
 from config import *
-from ev_charge_profile import *
-from olp_abstract_model import *
+from tgc_floris_padt.tgcsim.models._ev_charge_profile import *
+from tgc_floris_padt.tgcsim.models._olp_abstract_model import *
 from energy_price import *
 
 # --------------------------------------------------------------------------

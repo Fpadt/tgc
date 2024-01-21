@@ -69,7 +69,6 @@ class EV(sim.Component):
         # --- Constants ---
         self._dur = duration_of_stay
         self._isc = initial_state_of_charge
-        self._csc = self._isc
         self._dsc = desired_state_of_charge
         self._cap = ev_battery_capacity
         self._deg = battery_degradation
@@ -80,7 +79,7 @@ class EV(sim.Component):
         # --- Dynamic ---
         self._mpi = ev_max_power_input
         self._rel = min(self._iel + self._dur * self._mpi, self._del)
-        self._rtc = self._rel / self._cap
+        self._rtc = self._rel/self._cap
 
         # --- Variables ---
         self._toa = None  #
@@ -99,14 +98,10 @@ class EV(sim.Component):
     @property
     def cap(self):
         return self._cap
-    
-    @property
-    def csc(self):
-        return self._cel/self._cap
 
-    @property
-    def enr(self):
-        return self._cel - self._iel
+    # @property
+    # def enr(self):
+    #     return self._cel - self._iel
 
     @property
     def deg(self):
@@ -140,16 +135,17 @@ class EV(sim.Component):
         return self._tch
 
     # TODO formula for > 80
+    # TODO if cel = rel mpi = 0
     @property
     def mpi(self):
         mpi = 0
-        if round(self._rel - self._cel, 6) != 0:
+        if self._cel < self._rel:
             mpi = self._mpi
         return mpi
 
-    # @property
-    # def pwr(self):
-    #     return self._pwr
+    @property
+    def pwr(self):
+        return self._pwr
 
     @property
     def sat(self):
@@ -250,7 +246,7 @@ class SE(sim.Component):
 
     @property
     def mpo(self):
-        return self._mpo
+        return self._mpo    
 
     @property
     def pwr(self):
@@ -287,10 +283,11 @@ class SE(sim.Component):
         else:
             return charge_profile(
                 dur=self._evc.dur,
-                csc=self._evc.csc,
+                soc=self._evc.isc,
                 dsc=self._evc.dsc,
                 cap=self._evc.cap,
-                pwr=self.pwr,
+                mpi=self._evc.mpi,
+                mpo=self.mpo,
                 deg=self._evc.deg,
             )
 
@@ -304,9 +301,6 @@ class SE(sim.Component):
             self._evc = QUE.pop()
             self._evc.ses = self.name() + "-" + self._evc.name()
             self._evc.toa = app.now()
-
-            TGC.activate()
-            TGC.remaining_duration(0, priority=0, urgent=True)
 
             # charge EV
             self.hold(self._evc.dur, priority=2)
@@ -323,8 +317,8 @@ class SE(sim.Component):
             # release EV
             self._evc = None
 
-
 class TGC_clock(sim.Component):
+    
     def process(self):
         while True:
             self.passivate()
@@ -334,19 +328,19 @@ class TGC(sim.Component):
     def setup(self):
         # --- Objects ---
         self.schedule = app.Queue("SCHEDULE")
-        # self._clock = TGC_clock()
+        self._clock = TGC_clock()
 
     def set_clock(self):
         min_rtc = float("inf")
         for se in HUB.ses:
             if se.evc is not None and se.evc.isscheduled():
                 if se.evc.rtc > 0:
-                    tst = se.scheduled_time() - app.now()
-                    min_rtc = min(min_rtc, se.evc.rtc)
+                    tst =se.scheduled_time() - app.now()
+                    min_rtc = min(min_rtc, se.evc.rtc)  
                 if min_rtc <= 0:
-                    min_rtc = float("inf")
+                    min_rtc = float("inf") 
         self._clock.activate()
-        self._clock.remaining_duration(min_rtc, priority=0, urgent=True)
+        self._clock.remaining_duration(min_rtc, priority=0, urgent=True)        
 
     def make_schedule(self, property_name):
         """Make a schedule of EVSEs sorted on property_name"""
@@ -381,10 +375,16 @@ class TGC(sim.Component):
                 # \tpwr: {se.pwr}\tdsc: {round(se.ev.dsc)}  rem: {se.remaining_duration()}\tsch: {se.scheduled_time()}"""
             )
 
-    def print_charge(self):
-        for se in HUB.ses:
-            if se.evc is not None and se.evc.isscheduled():
-                print(se.get_charge_profile())
+    def print_charge(self, se):
+        if se.evc is None:
+            print(f"{app.now()}\t - NO_EV/{se.name()} ")
+        else:
+            print(
+                se.get_charge_profile()
+                # f"{env.now()}\t - {evse.ev.name()}/{evse.name()} - pwr: {evse.pwr}\
+                #   dc: {round(evse.ev.dc)} - ckwh: {round(evse.ev.ckwh)} - \
+                #   rem: {evse.remaining_duration()} sch: {evse.scheduled_time()}"
+            )
 
     def assign_power(self):
         """Assign power to EVSEs according to priority
@@ -414,34 +414,36 @@ class TGC(sim.Component):
             available_power = max(available_power, 0)  # note may not be negative
             # print(f"available_power: {available_power}")
 
-    def get_next_hold(self) -> float:
-        nxt_hold = float("inf") 
-        for se in HUB.ses:
-            if se.evc is not None and se.evc.isscheduled():
-                nxt_hold = min(se.get_charge_profile()["n_hold"], nxt_hold)
-        return nxt_hold
-
     def update_se_enerygy_charged(self):
         for se in HUB.ses:
             if se.evc is not None and se.evc.isscheduled():
                 se.update_energy_charged()
 
+    # def determine_next_hold(self):
+    #     min_time_slot = tgc_hold
+
+
+
+    #     for se in HUB.ses:
+    #         if se.evc is not None and se.isscheduled():
+    #             st = se.scheduled_time() - app.now()
+    #             if st > 0 and st < min_time_slot:
+    #                 min_time_slot = se.scheduled_time() - app.now()
+    #     return min_time_slot
 
     def process(self):
-        self.passivate()        
+        ts = 0
         while True:
-            # ts = app.now(); print(f"time: {ts}")
+            ts = app.now()
             self.update_se_enerygy_charged()
-            self.assign_power()
-            next_hold = self.get_next_hold()
-            # ts = app.now(); print(f"time: {ts}")            
-            self.hold(next_hold)
-            # ts = app.now(); print(f"time: {ts}")
+            self.set_clock()            
+            self.assign_power()            
+            ts = app.now()
             # statistics
             # [self.print_state(x) for x in HUB.ses]
             # [self.print_charge(x) for x in HUB.ses]
             # next_hold = self.determine_next_hold()
-            # self.standby()
+            self.standby()
             # self.hold(next_hold, priority=0, urgent=True)  # makes it run every hour
 
 
@@ -475,7 +477,7 @@ class EV_Generator(sim.Component):
             cap = self.rnd_cap()
             mpi = self.rnd_mpi()
             isc = self.rnd_isc()
-            dsc = self.rnd_dsc()  # 1 * dur * mpi / cap + isc #
+            dsc = self.rnd_dsc()  # 1 * dur * mpi / cap + isc # 
             deg = self.rnd_deg()
             # create EV and assign random values
             ev = EV(
@@ -602,7 +604,7 @@ if print_se_details == True:
 sat_values = [ev.sat for ev in app.evs]
 mean_sat = np.nanmean(sat_values)
 
-print(f"Customer Satisfaction: {round(mean_sat, 0)} %")
+print(f"Customer Satisfaction: {round(mean_sat, 2)} %")
 
 # --- Enexis ---
 enx_mon = sum(se.mon_kwh for se in HUB.ses).rename("Enexis performance")
