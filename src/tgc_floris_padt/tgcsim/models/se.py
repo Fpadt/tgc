@@ -27,13 +27,15 @@ class SE(Component):
         self._que = waiting_line
         self._app = simulation_app
         # --- Variables ---
-        self._pwr = 0
-        self._ppw = 0  # previous power
+        self._pwr = 0  # TODO needed or just past directly to EV?
+        self._toa = None
         # --- Objects ---
         self._evc = None  # ev being charged
         # --- Monitors ---
-        self.mon_kwh = Monitor(name="SE kWh", level=True)
-        self.mon_dur = Monitor(name="SE Dur", level=False)
+        self.status.monitor(False)
+        self.mode.monitor(False)
+        self._mon_kwh = Monitor(name="SE_kWh", level=True, type='float')
+        self._mon_dur = Monitor(name="SE_dur", level=False, type='float')
 
     # --- properties Read ---
     @property
@@ -41,50 +43,58 @@ class SE(Component):
         return self._con
 
     @property
+    def evc(self):
+        return self._evc
+
+    @property
     def mpo(self):
         return self._mpo
+
+    @property
+    def mon_kwh(self):
+        return self._mon_kwh    
 
     @property
     def pwr(self):
         return self._pwr
 
     @property
-    def evc(self):
-        return self._evc
+    def toa(self):
+        return self._toa
+
+    @property
+    def tod(self):
+        return np.Nan if self._evc is None else self._toa + self._evc.dur
 
     @property
     def utl(self):
-        return 100 * self.mon_kwh.mean(ex0=False) / self._mpo
+        return 100 * self._mon_kwh.mean(ex0=False) / self._mpo
 
     # --- properties Write ---
-    @con.setter
-    def con(self, value):
-        self._con = value
+    # @con.setter
+    # def con(self, value):
+    #     self._con = value
+
+    @evc.setter
+    def evc(self, ev):
+        self._evc = ev
 
     @pwr.setter
     def pwr(self, value):
-        # self._ppw = self._pwr
-        self._pwr = value
-        self.mon_kwh.tally(self._pwr)
+        self._pwr = min(value, self._mpo)
+        if self._evc is not None:
+            self._evc.pwr = self._pwr
+
+    @toa.setter
+    def toa(self, value):
+        self._toa = value
+        self._evc.toa = value
 
     # --- Methods ---
-    def update_energy_charged(self):
-        # self.mon_kwh.tally(self._pwr)
-        self._evc.update_energy_charged(self._pwr)
-        # self._evc.enr = self._ppw * slot_duration
-
-    def get_charge_profile(self):
-        if self._evc is None:
-            return None
-        else:
-            return charge_profile(
-                dur=self._evc.dur,
-                csc=self._evc.s_c,
-                dsc=self._evc.s_d,
-                cap=self._evc.cap,
-                pwr=self.pwr,
-                deg=self._evc.deg,
-            )
+    def request_power(self) -> None:
+        """Request power from the SE."""
+        self._tgc.request_power()
+        return None
 
     def process(self):
         while True:
@@ -92,25 +102,33 @@ class SE(Component):
             while len(self._que) == 0:
                 self.passivate()
 
-            # assign EV
+            # Connect SE/EV
             self._evc = self._que.pop()
             self._evc.sec = self
-            self._evc.toa = self._app.now()
 
-            self._tgc.activate()
-            self._tgc.remaining_duration(0, priority=0, urgent=True)
+            # registrate start time of charge
+            self.toa = self._app.now()
+            self._evc.activate()
 
-            # charge EV
+            # Park EV (EV determines if charging)
             self.hold(self._evc.dur, priority=2)
 
-            # update statistics
-            self.update_energy_charged()
-            self.mon_kwh.tally(0)
-            self.mon_dur.tally(self._evc.dur)
-            self._evc.mon_dur.tally(self._evc.dur)
+            # EV leaving, disconnect and deactivate loading & monitoring
+            self._evc.pwr = 0
+            self._evc.tod = self._app.now()
+            # self._evc.passivate() #TODO not necessary after pwr = 0
+
+            # # add EV charging profile to EV charging profile
+            # print(f"time: {self._app.now()}\ttoa: {self._toa}\tdur: {self._evc.dur}\ttod: {self.tod}")
+            # print(self._evc.mon_kwh.as_dataframe())
+            # print("\n")
+            # self._mon_kwh += self._evc.mon_kwh
+
+            self._mon_dur.tally(self._evc.dur)
 
             # register EV in list for Reporting
             self._evc.register(self._app.evs)
 
             # release EV
+            self._evc.sec = None
             self._evc = None

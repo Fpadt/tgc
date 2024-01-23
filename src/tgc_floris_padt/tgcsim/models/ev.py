@@ -2,6 +2,10 @@ from salabim import Monitor, Component
 from scipy.optimize import fsolve
 import numpy as np
 
+# TODO remove
+import matplotlib.pyplot as plt
+
+
 def cv_pwr(t: float, pm: float, k: float) -> float:
     """
     Calculate the charging power for a given time.
@@ -38,7 +42,8 @@ def cv_eng(t2, t1, pm, k) -> float:
         0.01-0.03 charge aggressively,
         0.05-0.1  prioritizing battery health and longevity
     """
-    return (-1 / k) * (cv_pwr(t2, pm, k) - cv_pwr(t1, pm, k)) 
+    return (-1 / k) * (cv_pwr(t2, pm, k) - cv_pwr(t1, pm, k))
+
 
 # Define the function for the given equation with specific ta, pm and k
 def zero_for_E(t2, t1, pm, k, E) -> float:
@@ -91,28 +96,30 @@ class EV(Component):
         simulation_app,
     ):
         # --- set by setup parameters ---
+        self._app = simulation_app
         self._cap = ev_battery_capacity
-        self._cvp = ev_start_of_cv_phase_percentage / 100
         self._deg = battery_degradation
         self._dur = duration_of_stay
+        self._fac = charging_facility
         self._mpi = ev_max_power_input
+        self._mxq = max_queue_length
+        # self._mxw = max_wait_time
+        self._que = waiting_line
+        self._rcv = ev_start_of_cv_phase_percentage / 100
         self._s_d = desired_state_of_charge
         self._s_i = initial_state_of_charge
-        self._fac = charging_facility
-        self._que = waiting_line
-        self._mxq = max_queue_length
-        self._mxw = max_wait_time
-        self._app = simulation_app
+
         # --- Dynamic Read/Write ---
-        self._pwr = 7  # TODO
+        self._pwr = 0
         self._sec = None
+        self._ses = None
         self._toa = None
-        self._tss = None  # TODO still needed?
+        self._tod = None
 
         # --- Monitors ---
-        self.mon_kwh = Monitor(name="EV kWh", level=True)  # TODO remove
-        self.mon_dur = Monitor(name="EV Dur", level=False)  # TODO remove
-        self.mon_pwr = Monitor(name="EV_pwr", level=True)
+        self.status.monitor(False)
+        self.mode.monitor(False)
+        self._mon_kwh = Monitor(name="EV_kwh", level=True, type="float")
 
     # --- Properties Read ---
     @property
@@ -144,54 +151,70 @@ class EV(Component):
         return min(self.e_i + self._dur * self._mpi, self.e_d)
 
     @property
+    def e_v(self) -> float:
+        return self._rcv * self._cap
+
+    @property
     def ecd(self) -> float:
-        return self.e_d - self.e_c
+        return max(self.e_d - self.e_c, 0)
 
     @property
     def ecr(self) -> float:
-        return self.e_r - self.e_c
+        return max(self.e_r - self.e_c, 0)
 
     @property
     def eic(self) -> float:
-        df = self.mon_pwr.as_dataframe()
+        df = self._mon_kwh.as_dataframe()
         eic = df.assign(
             pt=df["t"].shift(-1),
             dt=lambda df: df["pt"] - df["t"],
-            cp=lambda df: df["dt"] * df["EV_pwr.x"],
+            cp=lambda df: df["dt"] * df["EV_kwh.x"],
         )["cp"].sum(skipna=True)
         return eic
 
     @property
     def eid(self) -> float:
-        return self.e_d - self.e_i
+        return max(self.e_d - self.e_i, 0)
 
     @property
     def eir(self) -> float:
-        return self.e_r - self.e_i
+        return max(self.e_r - self.e_i, 0)
 
     @property
     def ep1(self) -> float:
-        return max(self._cvp * self._cap - self.e_c, 0)
+        return max(self._rcv * self._cap - self.e_c, 0)
 
     @property
     def ep2(self) -> float:
-        return max(self.e_r - self._cvp * self._cap, 0)
-
-    @property
-    def ep3(self) -> float:
-        return 0
+        return max(self.e_r - self._rcv * self._cap, 0)
 
     @property
     def erd(self) -> float:
-        return self.e_d - self.e_r
+        return max(self.e_d - self.e_r, 0)
 
     @property
     def llx(self) -> float:
-        return self.tod - self.tcr
+        return np.NaN if self._sec is None else self._sec.tod - self.tcr
+
+    @property
+    def mon_kwh(self):
+        return self._mon_kwh
 
     @property
     def mpi(self) -> float:
         return self._mpi
+
+    @property
+    def p_d(self) -> float:
+        return self.pp1 if self.tp1 > 0 else self.pp2
+
+    @property
+    def pp1(self) -> float:
+        return 0 if self.tp1 == 0 else self.ep1 / self.tp1
+
+    @property
+    def pp2(self) -> float:
+        return 0 if self.tp2 == 0 else self.ep2 / self.tp2
 
     @property
     def pwr(self) -> float:
@@ -199,12 +222,8 @@ class EV(Component):
         return self._pwr
 
     @property
-    def p_r(self) -> float:
-        return min(self._mpi, self._sec.mpo)
-    
-    @property
     def s_c(self) -> float:
-        return self.e_c / self._cap
+        return 0 if self._cap == 0 else self.e_c / self._cap
 
     @property
     def s_d(self) -> float:
@@ -216,63 +235,67 @@ class EV(Component):
 
     @property
     def s_r(self) -> float:
-        return self.e_r / self._cap
+        return 0 if self._cap == 0 else self.e_r / self._cap
 
     @property
     def sat(self) -> float:
-        return self.eic / self.eir
+        return 100 if self.eir ==0 else 100 * self.eic / self.eir
 
     @property
     def scd(self) -> float:
-        return self.ecd / self._cap
+        return 0 if self._cap == 0 else self.ecd / self._cap
 
     @property
     def scr(self) -> float:
-        return self.ecr / self._cap
+        return 0 if self._cap == 0 else self.ecr / self._cap
 
     @property
     def sec(self) -> float:
         return self._sec
-    
+
     @property
     def ses(self) -> float:
-        return self._sec.name() + "/" + self.name()
+        return self._ses
 
     @property
     def sic(self) -> float:
-        return self.eic / self._cap
+        return 0 if self._cap == 0 else self.eic / self._cap
 
     @property
     def sid(self) -> float:
-        return self.eid / self._cap
+        return 0 if self._cap == 0 else self.eid / self._cap
 
     @property
     def sir(self) -> float:
-        return self.eir / self._cap
+        return 0 if self._cap == 0 else self.eir / self._cap
 
     @property
     def srd(self) -> float:
-        return self.erd / self._cap
+        return 0 if self._cap == 0 else self.erd / self._cap
+
+    @property
+    def t_d(self) -> float:
+        return self.tp1 if self.tp1 > 0 else self.tp2
 
     @property
     def tcd(self) -> float:
-        return self.ecd / self._pwr
+        return 0 if self.mpi == 0 else self.ecd / self._mpi  # TODO
 
     @property
     def tcr(self) -> float:
-        return self.ecr / self._pwr
+        return 0 if self.mpi == 0 else self.ecr / self._mpi  # TODO
 
     @property
     def tic(self) -> float:
-        return self.eic / self.pwr
+        return 0 if self.mpi == 0 else self.eic / self.mpi  # TODO
 
     @property
     def tid(self) -> float:
-        return self.eid / self._pwr
+        return 0 if self.mpi == 0 else self.eid / self._mpi  # TODO
 
     @property
     def tir(self) -> float:
-        return self.eir / self._pwr
+        return 0 if self.mpi == 0 else self.eir / self._mpi  # TODO
 
     @property
     def toa(self) -> float:
@@ -280,77 +303,98 @@ class EV(Component):
 
     @property
     def tod(self) -> float:
-        return self._toa + self._dur
+        return self._tod
 
     @property
     def tp1(self) -> float:
-        return min(self.ep1 / self._mpi, self.tp3)
+        return 0 if self.mpi == 0 else self.ep1 / self.mpi  # TODO
 
     @property
     def tp2(self) -> float:
         # Solve the equation numerically
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fsolve.html
-        
-        # TODO: replace self._mpi by self.p_r on all places
+
         sol = 0
         if self.ep2 > 0:
-            sol = fsolve(func=zero_for_E, x0=0, args=(0, self._mpi, self._deg, self.ep2), xtol=1e-2)[0]
+            sol = fsolve(
+                func=zero_for_E,
+                x0=0,
+                args=(0, self.mpi, self._deg, self.ep2),  # TODO
+                xtol=1e-2,
+            )[0]
 
         return sol
 
     @property
-    def tp3(self) -> float:
-        return max(self.tod - self._app.now(), 0)
-
-    @property
     def trd(self) -> float:
-        return self.erd / self._pwr
-
-    @property  # TODO still needed?
-    def tss(self) -> float:
-        return self._tss
+        return 0 if self._pwr == 0 else self.erd / self._mpi  # TODO
 
     # --- properties Write ---
 
-    # @pwr.setter
-    # def pwr(self, value):
-    #     energy_charged = (self._app.now() - self._tss) * self._ppw
-    #     self.cle += energy_charged
-    #     # self.mon_kwh.tally(energy_charged)
-    #     self._ppw = self._pwr
-    #     self._tss = self._app.now()
-    #     self._pwr = value
+    @pwr.setter
+    def pwr(self, value):
+        self._pwr = value
+        if self.sec is not None:
+            self._mon_kwh.tally(self._pwr)
+            self._sec.mon_kwh.tally(self._pwr)
+        if self._pwr == 0:
+            self.passivate()
+        else:
+            self.activate()
 
     @sec.setter
     def sec(self, se):
         self._sec = se
+        if se is not None:
+            self._ses = self._sec.name() + "/" + self.name()
 
     @toa.setter
-    def toa(self, start_time_of_charge):
-        self._toa = start_time_of_charge
-        self._tss = self._toa
+    def toa(self, value):
+        self._toa = value
+        self._mon_kwh.reset(True)
 
-    # --- Methods --- TODO replace by power to mon
-    def update_energy_charged(self, power):
-        energy_charged = (self._app.now() - self._tss) * power
-        # self.cle += energy_charged
-        self.mon_kwh.tally(energy_charged)
-        self._tss = self._app.now()
+    @tod.setter
+    def tod(self, value):
+        self._tod = value
 
+    # --- Methods --- 
     def process(self):
+        # check if queue is full
         if len(self._que) >= self._mxq:
             self._app.number_balked += 1
             self.cancel()
+
         # enter the waiting line
         self.enter(self._que)
+
         # check if any SE is available
         for se in self._fac.fac:
             if se.ispassive():
                 se.activate()
                 break
-        self.hold(self._mxw, priority=1)  # if not serviced within this time, renege
-        if self in self._que:
-            self.leave(self._que)
-            self._app.number_reneged += 1
-        else:
-            self.passivate()  # wait for service to be completed
+        self.passivate()
+
+        # # if not serviced within this time, renege
+        # self.hold(self._mxw, priority=1)
+        # if self in self._que:
+        #     self.leave(self._que)
+        #     self._app.number_reneged += 1
+        # else:
+        # start charging
+
+        # Phase 1: charge till ev_start_of_cv_phase_percentage (80%)
+        while self._sec is not None and self.e_c <= self.e_v:
+            self._sec.request_power()
+            self.hold(self.t_d, priority=1)
+            self.pwr = 0
+
+        # Phase 2: charge till realistic energy level is reached
+        while self._sec is not None and self.e_v < self.e_c <= self.e_r:
+            self._sec.request_power()
+            self.hold(self.t_d, priority=1)
+            self.pwr = 0
+
+        # prepare to leave
+        self._sec.request_power()
+        self.pwr = 0
+

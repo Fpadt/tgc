@@ -21,7 +21,7 @@ class EV_Generator(Component):
         max_wait_time,
         simulation_app,
     ):
-        self._dis = distributions_dict    
+        self._dis = distributions_dict
         self._nev = number_of_evs
         self._fac = None
         self._que = None
@@ -48,7 +48,7 @@ class EV_Generator(Component):
     @property
     def que(self):
         return self._que
-    
+
     @que.setter
     def que(self, value):
         self._que = value
@@ -61,7 +61,7 @@ class EV_Generator(Component):
             cap = self._cap()
             mpi = self._mpi()
             isc = self._isc()
-            dsc = self._dsc()  # 1 * dur * mpi / cap + isc #
+            dsc = min(1 * dur * mpi / cap + isc, 1)  # self._dsc()  #TODO
             # create EV and assign random values
             ev = EV(
                 duration_of_stay=dur,

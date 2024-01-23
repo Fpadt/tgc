@@ -31,11 +31,11 @@ random_seed = 4343  #'*' # 42
 z = float("inf")  #          infinite
 
 time_unit = "hours"  #    time unit used in the simulation
-sim_time = 500
-# tgc_hold = 1  #            time to hold the tgc
+sim_time = 5000
+ex_plot = False
 
 # --- Network -------------------------------------------------------------
-e = z  #                     number of EV's
+e = z     #               number of EV's
 m = 20  #                    total number of SEs
 c = 10  #                    connected number of SE's
 # --- OLP ----------------------------------------------------------------
@@ -46,25 +46,37 @@ r = 1  #                     factor of Enexis grid connection
 q = z  #                     lenght of queue
 w = z  #                     wait time in hrs for a parking place
 
-RUL = "FIFO"
+# "EDD" : "tod" 
+# "LDD" : "-tod" 
+# "FIFO": "toa" 
+# "LIFO": "-toa"
+# "SPT" : "tch" 
+# "LPT" : "-tch" 
+# "SRT" : "rtc"  
+# "LRT" : "-rtc" 
+# "LLX" : "llx"  
+# "MLX" : "-llx" 
+# "RLX" : "rlx"  
+
+RUL = "toa"
 
 LAY = [True] * min(m, c) + [False] * max(m - c, 0)
 
-iat = 10 #60 / (40 * m) # 10
-dur = 8 # 60 / 50        #8
+iat = 60 / (40 * m) # 10
+dur = 60 / 50        #8
 
 params_dict = {
     "IAT": ("exponential", iat),  #      Interarrival time 60/40
     "DUR": ("exponential", dur),  #  Duration of Stay 
-    "ISC": ("uniform", 0, 0.5),  #       State of charge%
-    "DSC": ("uniform", 0.5, 1),  #       Desired state of charge%
-    "ENG": ("uniform", 0.3, 0.6),  #     Energy price
+    "ISC": ("uniform", 0, 0),  #       State of charge% #TODO
+    "DSC": ("uniform", 1, 1),  #       Desired state of charge%
     "CAP": ("uniform", 70, 70),  #       Capacity
-    "DEG": ("uniform", 0.00, 0.0),  # Battery degradation TODO
+    "DEG": ("uniform", 0.0075, 0.0075),  # Battery degradation
     "MPO": ("uniform", 7, 7),  #         EVSE max Power output
     "MPI": ("uniform", 7, 7),  #         EV max Power input
     "ENX": ("uniform", 70, 70),  #       enexis max Power output
-    "CVP": ("uniform", 80, 80),  #       Start of CV phase	
+    "CVP": ("uniform", 100, 100),  #       Start of CV phase #TODO
+    "ENG": ("uniform", 0.3, 0.6),  #     Energy price    	
 }
 
 EX_MPO = (
@@ -73,7 +85,7 @@ EX_MPO = (
 
 # --------------------------------------------------------------------------
 
-print_ev_details = True
+print_ev_details = False
 print_se_details = True
 
 print_solver_outcome = False
