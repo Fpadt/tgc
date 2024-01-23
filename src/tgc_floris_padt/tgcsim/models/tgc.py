@@ -1,12 +1,5 @@
 from salabim import Component, Queue
 
-# TODO: remove
-# class TGC_clock(Component):
-#     def process(self):
-#         while True:
-#             self.passivate()
-
-
 class TGC(Component):
     """Tetris Game Charger"""
 

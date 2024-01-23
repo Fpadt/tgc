@@ -1,7 +1,7 @@
 from salabim import Monitor, Component
 
 # TODO remove next line
-from tgcsim.models.ev_charge_profile import *
+from tgc_floris_padt.tgcsim.models._ev_charge_profile import *
 
 
 class SE(Component):
