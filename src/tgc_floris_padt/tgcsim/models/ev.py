@@ -3,10 +3,6 @@ from salabim import Monitor, Component
 from scipy.optimize import fsolve
 import numpy as np
 
-# TODO remove
-import matplotlib.pyplot as plt
-
-
 def cv_pwr(t: float, pm: float, k: float) -> float:
     """
     Calculate the charging power for a given time.
@@ -398,4 +394,3 @@ class EV(Component):
         # prepare to leave
         self._sec.request_power()
         self.pwr = 0
-

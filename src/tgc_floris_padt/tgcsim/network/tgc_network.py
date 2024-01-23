@@ -57,7 +57,6 @@ class TGC_network:
             name="Tetris Game Charger",
             enexis_max_power_output=self._mpo,
             priority_rule=self._rul,
-            simulation_app=self._app,
         )
 
         # instantiate the facility with Supply Equipment (chargers)

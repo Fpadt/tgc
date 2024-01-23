@@ -1,9 +1,5 @@
 from salabim import Monitor, Component
 
-# TODO remove next line
-from tgc_floris_padt.tgcsim.models._ev_charge_profile import *
-
-
 class SE(Component):
     """Class to model the behaviour of Supply Equipment (SE).
 
@@ -27,8 +23,9 @@ class SE(Component):
         self._que = waiting_line
         self._app = simulation_app
         # --- Variables ---
-        self._pwr = 0  # TODO needed or just past directly to EV?
+        self._pwr = 0  
         self._toa = None
+        self._ses = None
         # --- Objects ---
         self._evc = None  # ev being charged
         # --- Monitors ---
@@ -57,6 +54,10 @@ class SE(Component):
     @property
     def pwr(self):
         return self._pwr
+    
+    @property
+    def ses(self) -> float:
+        return self._ses
 
     @property
     def toa(self):
@@ -70,14 +71,12 @@ class SE(Component):
     def utl(self):
         return 100 * self._mon_kwh.mean(ex0=False) / self._mpo
 
-    # --- properties Write ---
-    # @con.setter
-    # def con(self, value):
-    #     self._con = value
-
     @evc.setter
     def evc(self, ev):
         self._evc = ev
+        if ev is not None:
+            self._ses = self.name() + "/" + self._evc.name()        
+
 
     @pwr.setter
     def pwr(self, value):
@@ -103,7 +102,7 @@ class SE(Component):
                 self.passivate()
 
             # Connect SE/EV
-            self._evc = self._que.pop()
+            self.evc = self._que.pop()
             self._evc.sec = self
 
             # registrate start time of charge
@@ -116,13 +115,6 @@ class SE(Component):
             # EV leaving, disconnect and deactivate loading & monitoring
             self._evc.pwr = 0
             self._evc.tod = self._app.now()
-            # self._evc.passivate() #TODO not necessary after pwr = 0
-
-            # # add EV charging profile to EV charging profile
-            # print(f"time: {self._app.now()}\ttoa: {self._toa}\tdur: {self._evc.dur}\ttod: {self.tod}")
-            # print(self._evc.mon_kwh.as_dataframe())
-            # print("\n")
-            # self._mon_kwh += self._evc.mon_kwh
 
             self._mon_dur.tally(self._evc.dur)
 
@@ -132,3 +124,4 @@ class SE(Component):
             # release EV
             self._evc.sec = None
             self._evc = None
+            self._mon_kwh.tally(0)

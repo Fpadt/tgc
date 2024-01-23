@@ -31,13 +31,13 @@ random_seed = 4343  #'*' # 42
 z = float("inf")  #          infinite
 
 time_unit = "hours"  #    time unit used in the simulation
-sim_time = 5000
-ex_plot = False
+sim_time = 50
+ex_plot = True
 
 # --- Network -------------------------------------------------------------
-e = z     #               number of EV's
+e = z    #               number of EV's
 m = 20  #                    total number of SEs
-c = 10  #                    connected number of SE's
+c = 3  #                    connected number of SE's
 # --- OLP ----------------------------------------------------------------
 n = 60  #                    time periods in the future (can become less)
 # --- Enexis --------------------------------------------------------------
@@ -62,8 +62,8 @@ RUL = "toa"
 
 LAY = [True] * min(m, c) + [False] * max(m - c, 0)
 
-iat = 60 / (40 * m) # 10
-dur = 60 / 50        #8
+iat = 10 / m #60 / (40 * m) # 10
+dur = 8     #60 / 50        #8
 
 params_dict = {
     "IAT": ("exponential", iat),  #      Interarrival time 60/40
@@ -85,7 +85,7 @@ EX_MPO = (
 
 # --------------------------------------------------------------------------
 
-print_ev_details = False
+print_ev_details = True
 print_se_details = True
 
 print_solver_outcome = False
@@ -118,4 +118,11 @@ solver = "glpk"  #          m 50 EVSE's, > 50 time periods
 
 # --------------------------------------------------------------------------
 
+def enexis_plot(df, c):
+    plt.step(df["t"], df[c], where="post", color="#DF0073")
 
+    plt.xlabel("t")
+    plt.ylabel("cap")
+    plt.title("Step Plot")
+
+    plt.show()
