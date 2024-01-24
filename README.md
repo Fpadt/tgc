@@ -12,11 +12,13 @@ Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (O
 
 ## JADS 23/34 - C2.Enexis
 
-- Alex Teeuwen
-- Anne-Marie Van Nes
-- Dominique Fürst
-- Floris Padt
-- Henk Koster
+ TGC members           | Role
+:----------------------|:--------------------------
+ Alex Teeuwen          | Reinforcement learning engineer
+ Anne-Marie Van Nes    | Organizer and criticaster
+ Dominique Fürst       | Statistical distributions Expert
+ Floris Padt           | OLP - engineer 
+ Henk Koster           | Presentor & business owner
 
 ## OLP
 The idea of OLP originates from this paper: 
