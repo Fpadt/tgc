@@ -3,7 +3,7 @@
         <td style="width:10%;"text-align:left;>
             <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" alt="Tetris Game Charger - created by chatGPT" style="width:20%; float:left;">
         </td>
-        <td style="width:80%;"></td>
+        <td style="width:80%;">&nbsp;</td>
         <td style="width:10%;"text-align:right;>
             <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/Enexis_JADS.png" alt="JADS_2324-C2.Enexis" style="width:20%; float:right;">
         </td>
@@ -16,7 +16,7 @@ The Tetris Game Charger (TGC) is the result of the group project of **C2.Enexis 
 
 This package is a toy package which leverages simulation using [Salabim](https://www.salabim.org/) to test multiple algorithms for scheduling electric vehicles (EV) in a charging facility.
 
-Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (OnLine Linear Programming) and RL (Reinforcement Learning). The latter is hpwever not available via this package.
+Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (OnLine Linear Programming) and RL (Reinforcement Learning). The latter is however not available via this package.
 
 ## OLP
 The idea of OLP originates from this paper: 
