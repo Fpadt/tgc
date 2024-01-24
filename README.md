@@ -1,12 +1,12 @@
  <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/Enexis_JADS.png" alt="JADS_2324-C2.Enexis" style="width:12%; float:right">
  
-# TGC - Tetris Game Charger <a href="https://test.pypi.org/project/tgc-jads-2324/" target="_blank" rel="noopener noreferrer"><img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" align="right" height="238" /></a>
+# TGC - Tetris Game Charger <a href="https://test.pypi.org/project/tgc-jads-2324/" target="_blank" rel="noopener noreferrer"><img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" align="right" height="300" /></a>
 
 
 
 The Tetris Game Charger (TGC) is the result of the group project of **C2.Enexis of class 23/24** of [Jheronymous Academy of Data Science (JADS).](https://www.jads.nl/education/data-science-and-ai-for-professionals/)
 
-This package is a toy package which leverages simulation using [Salabim](https://www.salabim.org/) to test multiple algorithms for scheduling electric vehicles (EV) in a charging facility.
+This [package on test.pypi](https://test.pypi.org/project/tgc-jads-2324/) is a toy package which leverages simulation using [Salabim](https://www.salabim.org/) to test multiple algorithms for scheduling electric vehicles (EV) in a charging facility.
 
 Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (OnLine Linear Programming) and RL (Reinforcement Learning). The latter is however not available via this package.
 
