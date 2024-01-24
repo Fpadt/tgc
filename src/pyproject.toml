@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "tgc_jads_2324"
-version = "0.0.1"
+version = "0.0.3"
 description = "Tetris Game Charger - JADS 23/24"
 authors = [
     "Floris Padt <floris@smart-r.net>",
