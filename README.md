@@ -6,7 +6,7 @@
 
 The Tetris Game Charger (TGC) is the result of the group project of **C2.Enexis of class 23/24** of [Jheronymous Academy of Data Science (JADS).](https://www.jads.nl/education/data-science-and-ai-for-professionals/)
 
-This [package on test.pypi](https://test.pypi.org/project/tgc-jads-2324/) is a toy package which leverages simulation using [Salabim](https://www.salabim.org/) to test multiple algorithms for scheduling electric vehicles (EV) in a charging facility.
+This [package](https://test.pypi.org/project/tgc-jads-2324/) is a toy package which leverages simulation using [Salabim](https://www.salabim.org/) to test multiple algorithms for scheduling electric vehicles (EV) in a charging facility.
 
 Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (OnLine Linear Programming) and RL (Reinforcement Learning). The latter is however not available via this package.
 
@@ -24,3 +24,10 @@ THis packages use by default the glptk solver. Other solvers like mosek, ipopt (
 - Dominique Fürst
 - Floris Padt
 - Henk Koster
+
+  ## Package Installation
+
+  [package on test.pypi](https://test.pypi.org/project/tgc-jads-2324/)
+
+  1. create new environment (recommended but optional)
+  2. '''pip install -i https://test.pypi.org/simple/ tgc-jads-2324'''
