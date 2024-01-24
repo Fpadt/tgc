@@ -1,11 +1,11 @@
 <table style="width:100%; border:0;">
     <tr>
-        <td style="width:10%;">
-            <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" alt="Tetris Game Charger - created by chatGPT" style="width:15%;; float:left;">
+        <td style="width:10%;"text-align:left;>
+            <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" alt="Tetris Game Charger - created by chatGPT" style="width:20%; float:left;">
         </td>
         <td style="width:80%;"></td>
-        <td style="width:10%;">
-            <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/Enexis_JADS.png" alt="JADS_2324-C2.Enexis" style="width:15%; float:right;">
+        <td style="width:10%;"text-align:right;>
+            <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/Enexis_JADS.png" alt="JADS_2324-C2.Enexis" style="width:20%; float:right;">
         </td>
     </tr>
 </table>
