@@ -3,23 +3,29 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "tgc_floris_padt"
-version = "0.0.4"
+name = "tgc_jads_2324"
+version = "0.0.1"
 description = "Tetris Game Charger - JADS 23/24"
-authors = ["Floris Padt <floris@smart-r.net>"]
+authors = [
+    "Floris Padt <floris@smart-r.net>",
+    "Alex Teeuwen",
+    "Domique Fürst",
+    "Henk Koster",
+    "Anne-Marie Van Nes",
+]
 
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-salabim = "23.3.13"
+salabim = "24.0.1"
 cplex = "22.1.1.0"
 docplex = "2.25.236"
 mosek = "10.1.21"
 opencv-python = "4.8.1.78"
 numpy = "^1.26.0"
 pandas = "^2.1.3"
-openpyxl = "3.1.2"  #maybe remove
+openpyxl = "3.1.2"         #maybe remove
 greenlet = "3.0.1"
 scipy = "1.11.4"
 pyomo = "6.7.0"

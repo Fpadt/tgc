@@ -191,7 +191,7 @@ class EV(Component):
 
     @property
     def llx(self) -> float:
-        return np.NaN if self._sec is None else self._sec.tod - self.tcr
+        return np.NaN if self._sec is None else self.ted - self.tcr
 
     @property
     def mon_kwh(self):
@@ -297,6 +297,10 @@ class EV(Component):
     @property
     def toa(self) -> float:
         return self._toa
+    
+    @property
+    def ted(self) -> float:
+        return float("inf") if self._sec is None else self._toa + self._dur
 
     @property
     def tod(self) -> float:

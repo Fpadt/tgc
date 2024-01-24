@@ -102,7 +102,7 @@ utl = dlv / (dlv + pot)
 
 print(
     f"""
-      Enexis Grid Utilization: {round(100*utl)} %\t\
+      Enexis Utilization: {round(100*utl)} %\t\
       Energy Delivered: {round(dlv, 2)} kWh\t\
       missed to deliver: {round(pot, 2)} kWh"""
 )
@@ -131,9 +131,10 @@ dfResult.to_csv(
 
 # --- Plot ---
 if ex_plot == True:
-    enexis_plot(enx_mon.as_dataframe(), c="EX_kwh.x")
+    enexis_plot(enx_mon.as_dataframe(), pwr="EX_kwh.x", utl=utl, sat=mean_sat)
 
 
 # TODO: check coding in EV generator for dsc and isc
+#    min(1 * dur * mpi / cap + isc, 1)  # self._dsc() 
 # TODO: ev.mpi formule > 80%
 # TODO: OLP koppelen aan TGC

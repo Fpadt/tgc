@@ -1,5 +1,7 @@
 from salabim import Monitor, Component
 
+import numpy as np
+
 class SE(Component):
     """Class to model the behaviour of Supply Equipment (SE).
 
@@ -65,7 +67,7 @@ class SE(Component):
 
     @property
     def tod(self):
-        return np.Nan if self._evc is None else self._toa + self._evc.dur
+        return float("inf") if self._evc is None else self._toa + self._evc.dur
 
     @property
     def utl(self):

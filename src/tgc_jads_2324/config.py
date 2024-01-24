@@ -2,11 +2,12 @@
 # packages and coding import
 # ------------------------------------------------------------------------
 
-# import salabim as sim
 import numpy as np
 import pandas as pd
+
 # from openpyxl import Workbook
 from datetime import datetime
+
 # import statistics
 # import os
 # import ntpath
@@ -15,12 +16,13 @@ from datetime import datetime
 # from tgcsim.models.tgc import TGC
 # from tgcsim.models.se_generator import SE_Generator
 # from tgcsim.models.ev_generator import EV_Generator
-from ev_charge_profile import *
+# from ev_charge_profile import *
 
 from salabim import App, Queue
 
-from plotnine import ggplot, aes, geom_point
+# from plotnine import ggplot, aes, geom_point
 import matplotlib.pyplot as plt
+
 # from olp_abstract_model import *
 # from energy_price import *
 
@@ -35,39 +37,42 @@ sim_time = 50
 ex_plot = True
 
 # --- Network -------------------------------------------------------------
-e = z    #               number of EV's
+e = z  #               number of EV's
 m = 20  #                    total number of SEs
-c = 3  #                    connected number of SE's
+c = 20  #                    connected number of SE's
 # --- OLP ----------------------------------------------------------------
 n = 60  #                    time periods in the future (can become less)
 # --- Enexis --------------------------------------------------------------
-r = 1  #                     factor of Enexis grid connection
+r = 0.5  #                     factor of Enexis grid connection
 # --- Queue ---------------------------------------------------------------
-q = z  #                     lenght of queue
+q = 1  #                     lenght of queue
 w = z  #                     wait time in hrs for a parking place
 
-# "EDD" : "tod" 
-# "LDD" : "-tod" 
-# "FIFO": "toa" 
-# "LIFO": "-toa"
-# "SPT" : "tch" 
-# "LPT" : "-tch" 
-# "SRT" : "rtc"  
-# "LRT" : "-rtc" 
-# "LLX" : "llx"  
-# "MLX" : "-llx" 
-# "RLX" : "rlx"  
-
-RUL = "toa"
+RLS = {
+    # "EDD": "ted",  #         Earliest Due Date
+    "EDF": "ted",  #         Earliest Due Date First    
+    "LDD": "-ted",  #        Latest Due Date
+    "FIFO": "toa",  #        First In First Out
+    "LIFO": "-toa",  #       Last In First Out
+    "SPT": "tid",  #         Shortest Processing Time
+    "LPT": "-tid",  #        Longest Processing Time
+    "SRT": "tcr",  #         Shortest Remaining Charging Time       
+    "LRT": "-tcr",  #        Longest Remaining Charging Time       
+    "LLX": "llx", #          Least Laxity
+    "MLX": "-llx", #         Maximum Laxity
+    # "RLX": "rlx", #          to be tested, dynamic - remaining laxity
+}
+PRIO = "SPT"
+RUL = RLS[PRIO]
 
 LAY = [True] * min(m, c) + [False] * max(m - c, 0)
 
-iat = 10 / m #60 / (40 * m) # 10
-dur = 8     #60 / 50        #8
+iat = 10 / m  # 60 / (40 * m) # 10
+dur = 8  # 60 / 50        #8
 
 params_dict = {
     "IAT": ("exponential", iat),  #      Interarrival time 60/40
-    "DUR": ("exponential", dur),  #  Duration of Stay 
+    "DUR": ("exponential", dur),  #  Duration of Stay
     "ISC": ("uniform", 0, 0),  #       State of charge% #TODO
     "DSC": ("uniform", 1, 1),  #       Desired state of charge%
     "CAP": ("uniform", 70, 70),  #       Capacity
@@ -76,7 +81,7 @@ params_dict = {
     "MPI": ("uniform", 7, 7),  #         EV max Power input
     "ENX": ("uniform", 70, 70),  #       enexis max Power output
     "CVP": ("uniform", 100, 100),  #       Start of CV phase #TODO
-    "ENG": ("uniform", 0.3, 0.6),  #     Energy price    	
+    "ENG": ("uniform", 0.3, 0.6),  #     Energy price
 }
 
 EX_MPO = (
@@ -118,11 +123,39 @@ solver = "glpk"  #          m 50 EVSE's, > 50 time periods
 
 # --------------------------------------------------------------------------
 
-def enexis_plot(df, c):
-    plt.step(df["t"], df[c], where="post", color="#DF0073")
+
+def enexis_plot(df, pwr, utl, sat):
+    plt.step(df["t"], df[pwr], where="post", color="#DF0073")
 
     plt.xlabel("t")
-    plt.ylabel("cap")
-    plt.title("Step Plot")
+    plt.ylabel("power [kW]")
+    plt.title(
+        "Enexis Utilization: "
+        + str(round(100 * utl))
+        + "%   "
+        + "Customer Satisfaction: "
+        + str(round(sat))
+        + "%"
+        + "\n"
+        + "Enexis mpo: "
+        + str(EX_MPO)
+        + "kW"
+        + " "
+        + "Places: "
+        + str(m)
+        + " "
+        + "Chargers: "
+        + str(c)
+        + "\n"
+        + "prio: "
+        + str(PRIO)
+        + " "
+        + " max. Queue length: "
+        + str(q)
+
+    )
 
     plt.show()
+
+
+
