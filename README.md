@@ -35,7 +35,9 @@ This packages use by default the glptk solver. Other solvers like mosek, ipopt (
 2. ```pip install -i https://test.pypi.org/simple/ tgc-jads-2324```
 
 ## References
-The next two links show the prework done to come to this model. The jupyter notebooks contain explanation and pyton coding with results. 
+The next two links show how teh final TGC model was build using the building blocks Queueing theory and Linear Programming with pyomo.  
+The jupyter notebooks contain explanation and pyton coding with results. 
+
 - [Queuing Theory (Waiting Line Models)](https://github.com/Fpadt/salabim_jads/blob/main/3rd-report/jads_3rd_interim_report.ipynb)
 - [OLP: Online Linear Programming](https://github.com/Fpadt/salabim_jads/blob/main/floris_tetris/olp/tgc_olp.ipynb)
 
