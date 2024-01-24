@@ -6,7 +6,7 @@
             # TGC - Tetris Game Charger
         </td>
         <td style="width:20%; text-align:right;">
-            <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" alt="Tetris Game Charger - created by chatGPT" style="width:100%;">
+            <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" alt="Tetris Game Charger - created by chatGPT" style="width:12%;">
         </td>
     </tr>
 </table>
