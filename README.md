@@ -35,7 +35,10 @@ This packages use by default the glptk solver. Other solvers like mosek, ipopt (
 2. ```pip install -i https://test.pypi.org/simple/ tgc-jads-2324```
 
 ## References
-The following links show the prework done to come to this model. The jupyter notebooks contain explanation adn coding of:
+The following links show the prework done to come to this model. 
+The jupyter notebooks contain explanation and pyton coding with results. 
+
+The last link is a downloadable excel file containing a lite OLP model which can be solved by the Excel Solver Add-in (needs to be activated)
 
 - [Queuing Theory (Waiting Line Models)](https://github.com/Fpadt/salabim_jads/blob/main/3rd-report/jads_3rd_interim_report.ipynb)
 - [OLP: Online Linear Programming](https://github.com/Fpadt/salabim_jads/blob/main/floris_tetris/olp/tgc_olp.ipynb)
