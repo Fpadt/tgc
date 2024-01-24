@@ -1,8 +1,6 @@
  <img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/Enexis_JADS.png" alt="JADS_2324-C2.Enexis" style="width:12%; float:right">
-
-# TGC - Tetris Game Charger
-
-<img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" alt="Tetris Game Charger - created by chatGPT" style="width:30%; float:center">
+ 
+# TGC - Tetris Game Charger <a href="https://test.pypi.org/project/tgc-jads-2324/" target="_blank" rel="noopener noreferrer"><img src="https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC_tran.png" align="right" height="138" /></a>
 
 The Tetris Game Charger (TGC) is the result of the group project of **C2.Enexis of class 23/24** of [Jheronymous Academy of Data Science (JADS).](https://www.jads.nl/education/data-science-and-ai-for-professionals/)
 
