@@ -13,7 +13,7 @@ Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (O
 ## JADS 23/34 - C2.Enexis
 
  TGC members           | Role                             | Quote
-:----------------------|:---------------------------------:------------------
+:----------------------|:---------------------------------|:------------------
  Alex Teeuwen          | Reinforcement learning engineer  | > I taught my computer to learn from its mistakes
  Anne-Marie Van Nes    | Organizer and criticaster        |
  Dominique Fürst       | Statistical distributions Expert |
