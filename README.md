@@ -33,3 +33,8 @@ This packages use by default the glptk solver. Other solvers like mosek, ipopt (
 
 1. create new environment *(recommended but optional)*
 2. ```pip install -i https://test.pypi.org/simple/ tgc-jads-2324```
+
+## References (pre-work)
+- [Queuing Theory (Waiting Line Models)](https://github.com/Fpadt/salabim_jads/blob/main/3rd-report/jads_3rd_interim_report.ipynb)
+- [OLP: Online Linear Programming](https://github.com/Fpadt/salabim_jads/blob/main/floris_tetris/olp/tgc_olp.ipynb)
+- [OLP lite in Excel](https://github.com/Fpadt/salabim_jads/blob/main/floris_tetris/olp/TGC_LP.xlsx)
