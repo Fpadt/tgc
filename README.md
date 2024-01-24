@@ -35,11 +35,11 @@ This packages use by default the glptk solver. Other solvers like mosek, ipopt (
 2. ```pip install -i https://test.pypi.org/simple/ tgc-jads-2324```
 
 ## References
-The next two links show how the final TGC model was built using the ```Queueing theory``` and ```Linear Programming with pyomo```.  
+The next two links show how the final TGC model was built using ```Queueing theory``` and ```Linear Programming``` with the pyomo package.  
 The jupyter notebooks contain explanation and pyton coding with results. 
 
 - [Queuing Theory (Waiting Line Models)](https://github.com/Fpadt/salabim_jads/blob/main/3rd-report/jads_3rd_interim_report.ipynb)
 - [OLP: Online Linear Programming](https://github.com/Fpadt/salabim_jads/blob/main/floris_tetris/olp/tgc_olp.ipynb)
 
-The last link is a downloadable excel file containing a lite OLP model which can be solved by the Excel Solver Add-in (needs to be activated)
+The last link is a downloadable excel file containing a lite OLP model which can be solved by the Excel Solver Add-in *(needs to be activated)*
 - [OLP lite in Excel](https://github.com/Fpadt/salabim_jads/blob/main/floris_tetris/olp/TGC_LP.xlsx)
