@@ -1,16 +1,24 @@
-# tgc
-Tetris Game Charger
+# Tetris Game Charger
 
-# Steps
+![Tetris Game Charger - created by chatGPT](https://github.com/Fpadt/tgc/blob/main/src/tgc_jads_2324/TGC.png)
 
-https://packaging.python.org/en/latest/flow/
+The Tetris Game Charger (TGC) is the result of the group project of **C2.Enexis of class 23/24** of [Jheronymous Academy of Data Science (JADS).](https://www.jads.nl/education/data-science-and-ai-for-professionals/)
 
-1. cd ~/tgc
-2. 'python3 -m build --sdist src' -> Successfully built tgc-0.0.0.tar.gz
-3. 'python3 -m build --wheel src'
-4. python3 -m twine upload --repository testpypi dist/*
+This package is a toy package which leverages simulation using [Salabim](https://www.salabim.org/) to test multiple algorithms for scheduling electric vehicles (EV) in a charging facility.
 
-https://test.pypi.org/project/tgc/
+Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (OnLine Linear Programming) and RL (Reinforcement Learning). The latter is hpwever not available via this package.
 
-<!-- 4. twine upload dist/tgc-0.0.0.tar.gz dist/tgc-0.0.0-py3-none-any.whl -->
+## OLP
+The idea of OLP originates from this paper: 
+[Guo et al. - 2017 - Optimal online adaptive electric vehicle charging](http://netlab.caltech.edu/assets/publications/Guo-2017-OLP.pdf).
 
+### Solver
+THis packages use by default the glptk solver. Other solvers like mosek, ipopt (MH27), cplex or gurobi can be configured but do require a trial license setup.
+
+## JADS 23/34 - C2.Enexis
+
+- Alex Teeuwen
+- Anne-Marie Van Nes
+- Dominique Fürst
+- Floris Padt
+- Henk Koster
