@@ -15,10 +15,10 @@ Next to the normal priority rules, e.g FIFO, SPT, EDD we also implemented OLP (O
  TGC members           | Role                             | Quote
 :----------------------|:---------------------------------:------------------
  Alex Teeuwen          | Reinforcement learning engineer  | > I taught my computer to learn from its mistakes
- Anne-Marie Van Nes    | Organizer and criticaster
- Dominique Fürst       | Statistical distributions Expert
- Floris Padt           | OLP - engineer 
- Henk Koster           | Presentor & business owner
+ Anne-Marie Van Nes    | Organizer and criticaster        |
+ Dominique Fürst       | Statistical distributions Expert |
+ Floris Padt           | OLP - engineer                   |
+ Henk Koster           | Presentor & business owner       |
 
 ## OLP
 The idea of OLP originates from this paper: 
