@@ -25,9 +25,9 @@ THis packages use by default the glptk solver. Other solvers like mosek, ipopt (
 - Floris Padt
 - Henk Koster
 
-  ## Package Installation
+## Package Installation
 
-  [package on test.pypi](https://test.pypi.org/project/tgc-jads-2324/)
+[package on test.pypi](https://test.pypi.org/project/tgc-jads-2324/)
 
-  1. create new environment (recommended but optional)
-  2. '''pip install -i https://test.pypi.org/simple/ tgc-jads-2324'''
+1. create new environment (recommended but optional)
+2. '''pip install -i https://test.pypi.org/simple/ tgc-jads-2324'''
